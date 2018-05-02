@@ -15,6 +15,7 @@
     <modules>
         <module>jacc-per-app</module>
 	<module>oauth2</module>
+	<module>yubkikey</module>
     </modules>
 
     <dependencies>
