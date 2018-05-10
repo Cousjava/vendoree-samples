@@ -1,6 +1,6 @@
 /** Copyright Payara Services Limited **/
 
-package org.vendoree.payara.security.yubikey;
+package org.vendoree.payara.security.twoFactor;
 
 import static javax.security.enterprise.authentication.mechanism.http.AuthenticationParameters.withParams;
 
@@ -15,6 +15,7 @@ import javax.security.enterprise.credential.Credential;
 import javax.security.enterprise.credential.UsernamePasswordCredential;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.vendoree.payara.security.identityStore.TestCredential;
 
 /**
  * This bean acts as the controller for login actions
@@ -38,20 +39,19 @@ public class LoginBean {
 
     public void login() throws IOException {
         Credential firstCredential = new UsernamePasswordCredential(username1, password1);
-        AuthenticationStatus status1 = securityContext.authenticate(
+        
+        //We do not care about the result of the first authenticate call as we're using a TwoFactorAuthenticationMechanism
+        //We are interested in the result of the second authenticate call .
+        securityContext.authenticate(
                 getRequestFrom(facesContext),
                 getResponseFrom(facesContext),
                 withParams().credential(firstCredential));
-        //printing passwords only for example app. Don't do this in your application.
-        System.out.println("Authenticated " + username1 + "=" + password1 + " as " + status1.name());
-        
-        Credential secondCredential = new UsernamePasswordCredential(username2, password2);
+
+        Credential secondCredential = new TestCredential(username2, password2);
         AuthenticationStatus status2 = securityContext.authenticate(
                 getRequestFrom(facesContext),
                 getResponseFrom(facesContext),
                 withParams().credential(secondCredential));
-        //printing passwords only for example app. Don't do this in your application.
-        System.out.println("Authenticated " + username2 + "=" + password2 + " as " + status2.name());
         
     }
 

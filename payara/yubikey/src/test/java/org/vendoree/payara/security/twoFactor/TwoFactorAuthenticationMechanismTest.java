@@ -1,6 +1,6 @@
 /** Copyright Payara Services Limited * */
 
-package org.vendoree.payara.security.yubikey;
+package org.vendoree.payara.security.twoFactor;
 
 import com.gargoylesoftware.htmlunit.ElementNotFoundException;
 import static org.jboss.shrinkwrap.api.ShrinkWrap.create;
@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.Page;
+import com.gargoylesoftware.htmlunit.TextPage;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
@@ -27,10 +28,11 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.vendoree.payara.security.identityStore.TestCredential;
+import org.vendoree.payara.security.identityStore.TestIdentityStore;
 
 
 /**
@@ -48,12 +50,14 @@ public class TwoFactorAuthenticationMechanismTest {
     
     private WebClient webClient;
     private URL protectedServletUrl;
+    private URL logoutServletUrl;
 
     @Before
     public void setup() throws MalformedURLException {
         webClient = new WebClient();
         webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
         protectedServletUrl = new URL(base, "protected");
+        logoutServletUrl = new URL(base, "logout");
     }
     
     @After
@@ -67,7 +71,11 @@ public class TwoFactorAuthenticationMechanismTest {
                 .addClasses(
                         ApplicationConfiguration.class,
                         ProtectedServlet.class,
-                        LoginBean.class
+                        LoginBean.class,
+                        LogoutServlet.class,
+                        TestCredential.class,
+                        TestIdentityStore.class
+                        
                 ).addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml").addAsLibraries(
                 Maven.resolver()
                         .loadPomFromFile("pom.xml")
@@ -99,11 +107,12 @@ public class TwoFactorAuthenticationMechanismTest {
     @Test
     @RunAsClient
     public void testAuthorised() throws IOException {
+        
         HtmlForm form = getToLoginPage();
         form.getInputByName("form:username1").type("mark");
         form.getInputByName("form:password1").type("test");
-        form.getInputByName("form:username2").type("bob");
-        form.getInputByName("form:password2").type("secret");
+        form.getInputByName("form:username2").type("valid");
+        form.getInputByName("form:password2").type("credential");
 
         Page secondPage = form.getInputByName("form:submit").click();
         WebResponse webResponsePage2 = secondPage.getWebResponse();
@@ -116,12 +125,11 @@ public class TwoFactorAuthenticationMechanismTest {
     @Test
     @RunAsClient
     public void testNotAuthorised() throws IOException {
-
         HtmlForm form = getToLoginPage();
         form.getInputByName("form:username1").type("fred");//invalid user
         form.getInputByName("form:password1").type("test");
-        form.getInputByName("form:username2").type("tom");//invalid user
-        form.getInputByName("form:password2").type("secret");
+        form.getInputByName("form:username2").type("valid");
+        form.getInputByName("form:password2").type("credential");
 
         Page secondPage = form.getInputByName("form:submit").click();
 
@@ -133,7 +141,7 @@ public class TwoFactorAuthenticationMechanismTest {
     @Test
     @RunAsClient
     public void testNotAuthorisedSingleValidCredentialFirst() throws IOException {
-
+        
         HtmlForm form = getToLoginPage();
         form.getInputByName("form:username1").type("mark");
         form.getInputByName("form:password1").type("test");
@@ -150,7 +158,7 @@ public class TwoFactorAuthenticationMechanismTest {
     @Test
     @RunAsClient
     public void testNotAuthorisedSingleValidCredentialLast() throws IOException {
-
+        
         HtmlForm form = getToLoginPage();
         form.getInputByName("form:username1").type("tom"); //invalid user
         form.getInputByName("form:password1").type("secret");
@@ -167,7 +175,7 @@ public class TwoFactorAuthenticationMechanismTest {
     @Test
     @RunAsClient
     public void testNotAuthorisedSingleValidCredentialSole() throws IOException {
-
+        
         HtmlForm form = getToLoginPage();
         form.getInputByName("form:username1").type("mark");
         form.getInputByName("form:password1").type("test");
@@ -182,7 +190,7 @@ public class TwoFactorAuthenticationMechanismTest {
     @Test
     @RunAsClient
     public void testNotAuthorisedNoCredential() throws IOException {
-
+        
         HtmlForm form = getToLoginPage();
         
         Page secondPage = form.getInputByName("form:submit").click();
@@ -190,5 +198,40 @@ public class TwoFactorAuthenticationMechanismTest {
         assertTrue("Expected login failure page. Instead got " + secondPage.getWebResponse().getContentAsString(),
                 secondPage.getWebResponse().getContentAsString().contains("Login failure"));
             
+    }
+    
+    @Test
+    @RunAsClient
+    public void testLoginLogoutIncorrectLogin() throws IOException {
+        
+        HtmlForm form = getToLoginPage();
+        form.getInputByName("form:username1").type("mark");
+        form.getInputByName("form:password1").type("test");
+        form.getInputByName("form:username2").type("valid");
+        form.getInputByName("form:password2").type("credential");
+
+        Page resultingPage = form.getInputByName("form:submit").click();
+        WebResponse webResponseResultingPage = resultingPage.getWebResponse();
+        String resultingPageContentAsString = webResponseResultingPage.getContentAsString();
+
+        assertTrue("Expected secure page. Instead got "+ resultingPageContentAsString, 
+                resultingPageContentAsString.contains("This is a protected servlet"));
+        
+        //logout 
+        TextPage logoutPage = webClient.getPage(logoutServletUrl);
+        
+        //try logging in again with only a valid second credential. Ensures the first credential result does not remain.
+        HtmlForm secondTimeForm = getToLoginPage();
+        secondTimeForm.getInputByName("form:username1").type("fred");//doesnt exist
+        secondTimeForm.getInputByName("form:password1").type("test");
+        secondTimeForm.getInputByName("form:username2").type("valid");
+        secondTimeForm.getInputByName("form:password2").type("credential");
+
+        Page secondPage = secondTimeForm.getInputByName("form:submit").click();
+        WebResponse webResponsePage2 = secondPage.getWebResponse();
+        String page2ContentAsString = webResponsePage2.getContentAsString();
+
+        assertTrue("Expected login failure page. Instead got "+ page2ContentAsString, 
+                page2ContentAsString.contains("Login failure"));
     }
 }

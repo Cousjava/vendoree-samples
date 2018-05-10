@@ -10,9 +10,9 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>yubikey</artifactId>
+    <artifactId>payara-twoFactor</artifactId>
     <packaging>war</packaging>
-    <name>Vendor EE: Payara - Yubikey Integration</name>
+    <name>Vendor EE: Payara - Two Factor Authentication</name>
 
     <properties>
         <payara.version>5.182-SNAPSHOT</payara.version>
@@ -28,6 +28,13 @@
             <groupId>fish.payara.security</groupId>
             <artifactId>yubikey-authentication</artifactId>
             <version>${payara.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.soteria</groupId>
+            <artifactId>javax.security.enterprise</artifactId>
+            <version>1.1-b01.payara-p3</version>
+            <type>jar</type>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

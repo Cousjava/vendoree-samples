@@ -1,7 +1,8 @@
 /** Copyright Payara Services Limited * */
 
-package org.vendoree.payara.security.yubikey;
+package org.vendoree.payara.security.twoFactor;
 
+import org.vendoree.payara.security.identityStore.TestIdentityStoreDefinition;
 import static javax.faces.annotation.FacesConfig.Version.JSF_2_3;
 
 import fish.payara.security.annotations.TwoFactorAuthenticationMechanismDefinition;
@@ -22,18 +23,19 @@ import org.glassfish.soteria.identitystores.annotation.EmbeddedIdentityStoreDefi
         version = JSF_2_3
 )
 
-//Two different identity stores would typically be used but as it's not currently possible to specify 
-//two identity stores of this type, for the sake of simplicity in this example the same one is used.
+//first identity store
 @EmbeddedIdentityStoreDefinition({
     @Credentials(callerName = "mark", groups = {"a", "b"}, password = "test"),
     @Credentials(callerName = "bob", groups = {"b", "c"}, password = "secret"),
     @Credentials(callerName = "alice", groups = {"d"}, password = "anothersecret")
 })
 
+//second identity store
+@TestIdentityStoreDefinition
+
 //Specify that this application is to use the TwoFactorAuthenticationMechanism
 @TwoFactorAuthenticationMechanismDefinition(loginToContinue
         = @LoginToContinue(loginPage = "/login.xhtml", errorPage = "/loginFailure.xhtml")
 )
 public class ApplicationConfiguration {
-
 }

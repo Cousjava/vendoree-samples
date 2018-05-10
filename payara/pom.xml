@@ -15,7 +15,7 @@
     <modules>
         <module>jacc-per-app</module>
 	<module>oauth2</module>
-	<module>yubkikey</module>
+	<module>payara-twoFactor</module>
     </modules>
 
     <dependencies>

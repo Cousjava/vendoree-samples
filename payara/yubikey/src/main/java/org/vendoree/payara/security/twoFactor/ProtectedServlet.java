@@ -1,6 +1,6 @@
 /** Copyright Payara Services Limited **/
 
-package org.vendoree.payara.security.yubikey;
+package org.vendoree.payara.security.twoFactor;
 
 import java.io.IOException;
 
