@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:jsf="http://xmlns.jcp.org/jsf">
+    <h:head>
+        <title>Login Form</title>
+    </h:head>
+    <body>
+        <p>
+            Login to continue
+        </p>
+    
+         <form jsf:id="form">
+            <h:messages />
+            <p>
+                <strong>Username 1</strong> 
+                <input jsf:id="username1" type="text" jsf:value="#{loginBean.username1}" />
+            </p>
+            <p>
+                <strong>Password 1</strong> 
+                <input jsf:id="password1" type="password" jsf:value="#{loginBean.password1}" />
+            </p>
+            <p>
+                <strong>Username 2</strong> 
+                <input jsf:id="username2" type="text" jsf:value="#{loginBean.username2}" />
+            </p>
+            <p>
+                <strong>Password 2</strong> 
+                <input jsf:id="password2" type="password" jsf:value="#{loginBean.password2}" />
+            </p>
+            <p>
+                <input type="submit" value="Login" jsf:id="submit" jsf:action="#{loginBean.login()}" />
+            </p>
+        </form>
+    </body>
+</html>
+
