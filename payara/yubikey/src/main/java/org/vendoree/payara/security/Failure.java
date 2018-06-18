@@ -13,6 +13,9 @@
  *  language governing permissions and limitations under the License.
  * 
  *  When distributing the software, include this License Header Notice in each
+ *  file and include the License.
+ * 
+ *  When distributing the software, include this License Header Notice in each
  *  file and include the License file at glassfish/legal/LICENSE.txt.
  * 
  *  GPL Classpath Exception:
@@ -37,16 +40,11 @@
  *  only if the new code is made subject to such option by the copyright
  *  holder.
  */
-package fish.payara.security.oauth2.testapp;
+package org.vendoree.payara.security;
 
-import fish.payara.security.annotations.OAuth2AuthenticationDefinition;
 import java.io.IOException;
-import javax.annotation.security.DeclareRoles;
-import javax.security.enterprise.credential.Credential;
-import javax.security.enterprise.credential.UsernamePasswordCredential;
+import java.io.PrintWriter;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.HttpConstraint;
-import javax.servlet.annotation.ServletSecurity;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -56,15 +54,15 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author jonathan
  */
-@WebServlet("/Secured")
-@OAuth2AuthenticationDefinition(authEndpoint = "http://localhost:8080/oauthtest/Endpoint", tokenEndpoint = "http://localhost:8080/oauthtest/Endpoint",
-        clientId = "mp.clientId", clientSecret = "mp.clientsecret", redirectURI = "http://localhost:8080/oauthtest/Callback")
-@DeclareRoles("all")
-@ServletSecurity(@HttpConstraint(rolesAllowed={"all"}))
-public class SecuredPage extends HttpServlet {
+@WebServlet("/Failure")
+public class Failure extends HttpServlet {
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.getWriter().println("This is a secured web page");
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        PrintWriter out = resp.getWriter();
+        
+        out.println("Login failure");
     }
+    
+    
 }
